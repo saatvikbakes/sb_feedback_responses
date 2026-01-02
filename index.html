@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Live Feedback Scroller</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: white;
+}
+
+#container {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+#content {
+  position: absolute;
+  width: 100%;
+  animation: scroll-up linear infinite;
+  animation-duration: 25s; /* adjust scroll speed */
+}
+
+@keyframes scroll-up {
+  0% { top: 100%; }
+  100% { top: -100%; }
+}
+
+.feedback {
+  padding: 20px;
+  font-size: 22px;
+  border-bottom: 1px solid #ddd;
+}
+</style>
+</head>
+
+<body>
+<div id="container">
+  <div id="content"></div>
+</div>
+
+<script>
+const FEED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRP8iz3kN2w7iTpVv6M_jiJsFyvnv4EzoMGaRkLi1BzgPIdEunP875mKv6ts79tLf_QWQYVY4f4OjJR/pub?output=csv";
+
+async function loadFeedback() {
+  const res = await fetch(FEED_URL);
+  const text = await res.text();
+  const rows = text.split("\n").filter(r => r.trim() !== "");
+
+  const container = document.getElementById("content");
+  container.innerHTML = rows
+    .map(r => `<div class="feedback">⭐ ${r}</div>`)
+    .join("");
+}
+
+loadFeedback();
+setInterval(loadFeedback, 30000); // refresh every 30 seconds
+</script>
+
+</body>
+</html>
