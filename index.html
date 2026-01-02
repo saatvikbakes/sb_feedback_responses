@@ -78,8 +78,31 @@ const FEED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRP8iz3kN2w7iT
 let feedbackList = [];
 let currentIndex = 0;
 
+// Convert rating number to stars
 function makeStars(num) {
-  return "⭐".repeat(parseInt(num));
+  const n = parseInt(num);
+  if (isNaN(n)) return "";
+  return "⭐".repeat(n);
+}
+
+// Safe CSV parser (handles commas inside quotes)
+function parseCSVLine(line) {
+  const result = [];
+  let current = "";
+  let insideQuotes = false;
+
+  for (let char of line) {
+    if (char === '"' ) {
+      insideQuotes = !insideQuotes;
+    } else if (char === "," && !insideQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result;
 }
 
 async function loadFeedback() {
@@ -91,7 +114,7 @@ async function loadFeedback() {
   const dataRows = rows.slice(1);
 
   feedbackList = dataRows.map(row => {
-    const cols = row.split(",");
+    const cols = parseCSVLine(row);
 
     return {
       name: cols[0] || "",
@@ -112,7 +135,6 @@ function showNextCard() {
   }
 
   const item = feedbackList[currentIndex];
-
   const stars = makeStars(item.rating);
 
   const html = `
