@@ -2,62 +2,88 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Live Feedback Scroller</title>
+<title>Live Feedback Carousel</title>
 
 <style>
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: white;
-}
-
-#container {
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   height: 100vh;
-  overflow: hidden;
-  position: relative;
 }
 
-#content {
-  position: absolute;
-  width: 100%;
-  animation: scroll-up linear infinite;
-  animation-duration: 25s; /* adjust scroll speed */
+.carousel-container {
+  width: 80%;
+  max-width: 600px;
+  text-align: center;
 }
 
-@keyframes scroll-up {
-  0% { top: 100%; }
-  100% { top: -100%; }
-}
-
-.feedback {
-  padding: 20px;
+.card {
+  padding: 30px;
   font-size: 22px;
-  border-bottom: 1px solid #ddd;
+  border-radius: 12px;
+  background: #f7f7f7;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  min-height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card.show {
+  opacity: 1;
 }
 </style>
 </head>
 
 <body>
-<div id="container">
-  <div id="content"></div>
+
+<div class="carousel-container">
+  <div id="card" class="card">Loading feedback...</div>
 </div>
 
 <script>
 const FEED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRP8iz3kN2w7iTpVv6M_jiJsFyvnv4EzoMGaRkLi1BzgPIdEunP875mKv6ts79tLf_QWQYVY4f4OjJR/pub?output=csv";
 
+let feedbackList = [];
+let currentIndex = 0;
+
 async function loadFeedback() {
   const res = await fetch(FEED_URL);
   const text = await res.text();
-  const rows = text.split("\n").filter(r => r.trim() !== "");
-
-  const container = document.getElementById("content");
-  container.innerHTML = rows
-    .map(r => `<div class="feedback">⭐ ${r}</div>`)
-    .join("");
+  feedbackList = text.split("\n").filter(r => r.trim() !== "");
 }
 
-loadFeedback();
-setInterval(loadFeedback, 30000); // refresh every 30 seconds
+function showNextCard() {
+  const card = document.getElementById("card");
+
+  if (feedbackList.length === 0) {
+    card.innerHTML = "No feedback yet...";
+    return;
+  }
+
+  card.classList.remove("show");
+
+  setTimeout(() => {
+    card.innerHTML = "⭐ " + feedbackList[currentIndex];
+    card.classList.add("show");
+    currentIndex = (currentIndex + 1) % feedbackList.length;
+  }, 1000);
+}
+
+async function startCarousel() {
+  await loadFeedback();
+  showNextCard();
+  setInterval(showNextCard, 15000); // 15 seconds per card
+  setInterval(loadFeedback, 30000); // refresh data every 30 seconds
+}
+
+startCarousel();
 </script>
 
 </body>
