@@ -16,27 +16,52 @@ body {
 }
 
 .carousel-container {
-  width: 80%;
+  width: 90%;
   max-width: 600px;
   text-align: center;
 }
 
 .card {
   padding: 30px;
-  font-size: 22px;
+  font-size: 20px;
   border-radius: 12px;
   background: #f7f7f7;
   box-shadow: 0 4px 20px rgba(0,0,0,0.1);
   opacity: 0;
   transition: opacity 1s ease-in-out;
-  min-height: 150px;
+  min-height: 220px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
 }
 
 .card.show {
   opacity: 1;
+}
+
+.name {
+  font-size: 26px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.stars {
+  font-size: 24px;
+  color: #ffb400;
+  margin-bottom: 10px;
+}
+
+.product {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.feedback {
+  font-size: 18px;
+  color: #333;
+  max-width: 90%;
 }
 </style>
 </head>
@@ -53,10 +78,29 @@ const FEED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRP8iz3kN2w7iT
 let feedbackList = [];
 let currentIndex = 0;
 
+function makeStars(num) {
+  return "⭐".repeat(parseInt(num));
+}
+
 async function loadFeedback() {
   const res = await fetch(FEED_URL);
   const text = await res.text();
-  feedbackList = text.split("\n").filter(r => r.trim() !== "");
+  const rows = text.split("\n").filter(r => r.trim() !== "");
+
+  // Skip header row
+  const dataRows = rows.slice(1);
+
+  feedbackList = dataRows.map(row => {
+    const cols = row.split(",");
+
+    return {
+      name: cols[0] || "",
+      rating: cols[1] || "",
+      product: cols[2] || "",
+      flavor: cols[3] || "",
+      feedback: cols[4] || ""
+    };
+  });
 }
 
 function showNextCard() {
@@ -67,13 +111,24 @@ function showNextCard() {
     return;
   }
 
+  const item = feedbackList[currentIndex];
+
+  const stars = makeStars(item.rating);
+
+  const html = `
+    <div class="name">${item.name}</div>
+    <div class="stars">${stars}</div>
+    <div class="product">${item.product} – ${item.flavor}</div>
+    <div class="feedback">${item.feedback}</div>
+  `;
+
   card.classList.remove("show");
 
   setTimeout(() => {
-    card.innerHTML = "⭐ " + feedbackList[currentIndex];
+    card.innerHTML = html;
     card.classList.add("show");
     currentIndex = (currentIndex + 1) % feedbackList.length;
-  }, 1000);
+  }, 500);
 }
 
 async function startCarousel() {
